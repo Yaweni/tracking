@@ -6,13 +6,51 @@ app = Flask(__name__)
 
 # Configure MySQL
 app.config['MYSQL_HOST'] = 'localhost'
-app.config['MYSQL_USER'] = 'admin'
-app.config['MYSQL_PASSWORD'] = 'Passw0rd'
+app.config['MYSQL_USER'] = 'root'
+app.config['MYSQL_PASSWORD'] = ''
 app.config['MYSQL_DB'] = 'software_tracking'
 
 mysql = MySQL(app)
 
 # Routes
+
+from datetime import datetime
+
+# ...
+
+# Route for admin page
+@app.route('/admin')
+def admin():
+    cur = mysql.connection.cursor()
+
+    # Fetch users, computers, tracked software, and runtime logs for the current day from the database
+    cur.execute("SELECT username FROM users")
+    users = cur.fetchall()
+
+    cur.execute("SELECT computers.computer_name FROM computers")
+    computers = cur.fetchall()
+
+    cur.execute("SELECT software_name FROM tracked_software")
+    tracked_software = cur.fetchall()
+
+    # Get today's date in YYYY-MM-DD format
+    today_date = datetime.now().strftime("%Y-%m-%d")
+
+    cur.execute("SELECT users.username, computers.computer_name, tracked_software.software_name, runtime_logs.status \
+                 FROM runtime_logs \
+                 JOIN users ON runtime_logs.user_id = users.user_id \
+                 JOIN computers ON runtime_logs.computer_id = computers.computer_id \
+                 JOIN tracked_software ON runtime_logs.software_id = tracked_software.software_id \
+                 WHERE DATE(log_date) = %s", (today_date,))
+    runtime_logs = cur.fetchall()
+    print(runtime_logs)
+
+    cur.close()
+
+    # Return data as JSON
+    #return jsonify(users=users, computers=computers, tracked_software=tracked_software, runtime_logs=runtime_logs)
+    return render_template('admin.html',users=users, computers=computers, tracked_software=tracked_software, runtime_logs=runtime_logs)
+
 @app.route('/update_status', methods=['POST'])
 def update_status():
     data = request.get_json()
@@ -33,6 +71,7 @@ def update_status():
 
 # Helper functions
 def get_user_id(username):
+
     cur = mysql.connection.cursor()
     cur.execute("SELECT user_id FROM users WHERE username = %s", (username,))
     user_id = cur.fetchone()[0]
@@ -65,12 +104,12 @@ def update_runtime_logs(user_id, computer_id, software_id,software_status):
 
         if log_id:
             # Update existing entry
-            cur.execute("UPDATE runtime_logs SET runtime_minutes = runtime_minutes + 5, status = %s WHERE log_id = %s",
+            cur.execute("UPDATE runtime_logs SET runtime_minutes = runtime_minutes + 0.25, status = %s WHERE log_id = %s",
                         (software_status, log_id))
         else:
             # Insert new entry
             cur.execute("INSERT INTO runtime_logs (user_id, computer_id,software_id, status, runtime_minutes) VALUES (%s, %s, %s, %s, 5)",
-                        (user_id, computer_id, software_status))
+                        (user_id, computer_id,software_id, software_status))
     else:
         if log_id:
             cur.execute("UPDATE runtime_logs SET status = %s WHERE log_id = %s",

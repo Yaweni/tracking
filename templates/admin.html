@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+     <!-- Add jQuery library (you can download it or use a CDN) -->
+    <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+    <style>
+        /* Highlight rows where users are online */
+        .online {
+            background-color: #aaffaa; /* Light green */
+        }
+        .offline {
+            background-color: #ffaaaa; /* Light red */
+        }
+    </style>
+
+    <script>
+        // Periodically refresh the page
+        function refreshPage() {
+            location.reload();
+        }
+
+        // Refresh every 5 minutes (150,000 milliseconds)
+        setInterval(refreshPage, 15000);
+    </script>
+    <title>Software Tracking Admin</title>
+</head>
+<body>
+    <h1>Software Tracking Admin</h1>
+
+    <h2>Users</h2>
+    <ul>
+        {% for user in users %}
+            <li>{{user[0]}}</li>
+        {% endfor %}
+    </ul>
+
+    <h2>Computers</h2>
+    <ul>
+        {% for computer in computers %}
+            <li>{{ computer[0] }}</li>
+        {% endfor %}
+    </ul>
+
+    <h2>Tracked Software</h2>
+    <ul>
+        {% for software in tracked_software %}
+            <li>{{ software[0] }}</li>
+        {% endfor %}
+    </ul>
+
+    <h2>Runtime Logs</h2>
+    <table border="1">
+        <tr>
+            <th>User</th>
+            <th>Computer</th>
+            <th>Software</th>
+            <th>Status</th>
+        </tr>
+        {% for log in runtime_logs %}
+            <tr>
+                <td>{{ log[0] }}</td>
+                <td>{{ log[1] }}</td>
+                <td>{{ log[2] }}</td>
+                <td class="{% if log[3] == 'online' %}online{% endif %}{% if log[3] != 'online' %}offline{% endif %}" >{{ log[3] }}</td>
+            </tr>
+        {% endfor %}
+    </table>
+</body>
+</html>
